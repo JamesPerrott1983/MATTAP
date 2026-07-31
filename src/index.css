@@ -856,3 +856,62 @@ textarea.admin__input {
   color: var(--text-dim);
   font-variant-numeric: tabular-nums;
 }
+
+/* ---------------- v2.1: logo, review photos, aligned distances ---------------- */
+
+.start__logocard {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 12px 18px;
+  margin: 0 auto;
+  max-width: 240px;
+  box-shadow: var(--shadow);
+}
+
+.start__logo {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Aligned kilometre column in the results list */
+.results__item-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.results__item-distance {
+  min-width: 92px;
+  text-align: right;
+}
+
+.results__item-chevron {
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Bigger review section with photo support */
+.results__review {
+  font-size: 14px;
+  padding: 12px 14px 16px;
+}
+
+.results__photo {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin: 10px 0 4px;
+}
+
+.results__review-title {
+  margin: 10px 0 2px;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.results__review-lead {
+  color: var(--text);
+}

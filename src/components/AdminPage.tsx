@@ -334,6 +334,15 @@ export default function AdminPage() {
                 onChange={(e) => updateDraft({ website: e.target.value || undefined })}
               />
             </label>
+            <label>
+              Image URL (photo shown in the results review)
+              <input
+                className="admin__input"
+                placeholder="https://… or /images/site.jpg"
+                value={draft.image ?? ''}
+                onChange={(e) => updateDraft({ image: e.target.value || undefined })}
+              />
+            </label>
           </div>
 
           <label className="admin__block">

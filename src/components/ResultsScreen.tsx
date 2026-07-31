@@ -132,7 +132,22 @@ export default function ResultsScreen({
 
                 {open && (
                   <div className="results__review">
-                    <p>{loc.review ?? loc.description}</p>
+                    {loc.image && (
+                      <img
+                        src={loc.image}
+                        alt={`${loc.companyName}, ${loc.city}`}
+                        className="results__photo"
+                        loading="lazy"
+                        onError={(e) => {
+                          // Missing image never breaks the layout (NFR-05).
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    )}
+                    <h3 className="results__review-title">
+                      {loc.facilityName ?? loc.companyName}
+                    </h3>
+                    <p className="results__review-lead">{loc.review ?? loc.description}</p>
                     {loc.review && <p>{loc.description}</p>}
                     {loc.facts?.map((fact) => (
                       <p key={fact} className="results__fact">
