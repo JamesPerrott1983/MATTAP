@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import rawLocations from './data/locations.json';
-import type { LatLng, MatLocation } from './types';
+import type { DailyResult, LatLng } from './types';
 import { useGame } from './game/useGame';
-import { hasValidCoordinates } from './game/selectLocations';
 import { QUESTIONS_PER_GAME } from './game/scoring';
-import { loadPrefs, savePrefs } from './game/storage';
+import { loadDailyResult, loadPrefs, saveDailyResult } from './game/storage';
+import { dailyLocations, dayKey, gameNumber } from './game/daily';
+import { effectiveLocations } from './data/locationsStore';
 import GlobeMap, { altitudeForDistance, midpoint, type GlobeView } from './components/GlobeMap';
 import StartScreen from './components/StartScreen';
 import ResultsScreen from './components/ResultsScreen';
@@ -12,18 +12,33 @@ import CompanyClueCard from './components/CompanyClueCard';
 import AnswerPanel from './components/AnswerPanel';
 import ProgressIndicator from './components/ProgressIndicator';
 import ErrorMessage from './components/ErrorMessage';
-
-/** Data is validated once at module scope — invalid records are dropped
- *  rather than crashing the game (NFR-05). */
-const LOCATIONS: MatLocation[] = (rawLocations as MatLocation[]).filter(hasValidCoordinates);
+import AdminPage from './components/AdminPage';
 
 export default function App() {
-  const game = useGame(LOCATIONS);
+  /* ---------------- routing (#admin) ---------------- */
+  const [route, setRoute] = useState(() => window.location.hash);
+  useEffect(() => {
+    const onHash = () => setRoute(window.location.hash);
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  /* ---------------- daily game identity ---------------- */
+  const today = useMemo(() => new Date(), []);
+  const todayKey = dayKey(today);
+  const gameNo = gameNumber(today);
+
+  const locations = useMemo(() => effectiveLocations(), []);
+
+  const game = useGame();
   const { state, currentLocation, lastAnswer } = game;
 
   const [prefs, setPrefs] = useState(loadPrefs);
   const [isNewBest, setIsNewBest] = useState(false);
   const [fatalError, setFatalError] = useState<string | null>(null);
+  const [storedResult, setStoredResult] = useState<DailyResult | null>(() =>
+    loadDailyResult(todayKey),
+  );
   const [view, setView] = useState<GlobeView | null>(null);
   const viewSeq = useRef(0);
 
@@ -32,31 +47,34 @@ export default function App() {
     setView({ ...v, key: `v${viewSeq.current}` });
   }, []);
 
-  /* Record the score exactly once when a game completes. */
-  const recordedFor = useRef(-1);
+  /* Record the score once when today's game completes. */
+  const recorded = useRef(false);
   useEffect(() => {
-    if (state.gameStatus === 'completed' && recordedFor.current !== state.answers.length) {
-      recordedFor.current = state.answers.length;
+    if (state.gameStatus === 'completed' && !recorded.current) {
+      recorded.current = true;
       const { prefs: nextPrefs, isNewBest: newBest } = game.finishGame();
       setPrefs(nextPrefs);
       setIsNewBest(newBest);
+      const result: DailyResult = {
+        dayKey: todayKey,
+        gameNo,
+        answers: state.answers,
+        totalScoreKm: state.totalScoreKm,
+        locationIds: state.selectedLocations.map((l) => l.id),
+      };
+      saveDailyResult(result);
+      setStoredResult(result);
     }
-  }, [state.gameStatus, state.answers.length, game]);
+  }, [state, game, todayKey, gameNo]);
 
-  const handleStart = useCallback(
-    (difficulty: (typeof prefs)['difficulty']) => {
-      try {
-        setPrefs(savePrefs({ difficulty }));
-        setIsNewBest(false);
-        recordedFor.current = -1;
-        game.startGame(difficulty);
-        pushView({ lat: 25, lng: 5, altitude: 2.2, transitionMs: 900 });
-      } catch (err) {
-        setFatalError(err instanceof Error ? err.message : 'Failed to start the game.');
-      }
-    },
-    [game, pushView],
-  );
+  const handleStart = useCallback(() => {
+    try {
+      game.startGame(dailyLocations(locations, today));
+      pushView({ lat: 25, lng: 5, altitude: 2.2, transitionMs: 900 });
+    } catch (err) {
+      setFatalError(err instanceof Error ? err.message : 'Failed to start the game.');
+    }
+  }, [game, locations, today, pushView]);
 
   const handleTap = useCallback(
     (coords: LatLng) => {
@@ -100,24 +118,27 @@ export default function App() {
     });
   }, [game, pushView, view]);
 
-  const handleReplay = useCallback(() => {
-    game.reset();
-  }, [game]);
-
   /* NFR-05: not enough data is a configuration error, shown clearly. */
   const configError = useMemo(() => {
-    const active = LOCATIONS.filter((l) => l.active);
+    const active = locations.filter((l) => l.active);
     if (active.length < QUESTIONS_PER_GAME) {
       return `The game needs at least ${QUESTIONS_PER_GAME} active locations but only ${active.length} are configured. Please check the location data.`;
     }
     return null;
-  }, []);
+  }, [locations]);
+
+  /* ---------------- admin route ---------------- */
+  if (route === '#admin') return <AdminPage />;
 
   if (configError) return <ErrorMessage title="Configuration error" message={configError} />;
   if (fatalError) return <ErrorMessage message={fatalError} />;
 
   const playing = state.gameStatus === 'playing';
   const revealed = state.gameStatus === 'answer_revealed';
+  const liveCompleted = state.gameStatus === 'completed';
+
+  /* Already played today (e.g. after a page reload) → show stored results. */
+  const showStored = !playing && !revealed && !liveCompleted && storedResult !== null;
 
   const guessMarker: LatLng | null =
     state.currentGuess ??
@@ -162,10 +183,11 @@ export default function App() {
           onTap={handleTap}
         />
 
-        {state.gameStatus === 'not_started' && (
+        {state.gameStatus === 'not_started' && !showStored && (
           <StartScreen
+            gameNo={gameNo}
+            dateLabel={todayKey}
             bestScoreKm={prefs.bestScoreKm}
-            initialDifficulty={prefs.difficulty}
             onStart={handleStart}
           />
         )}
@@ -173,7 +195,6 @@ export default function App() {
         {playing && currentLocation && (
           <CompanyClueCard
             location={currentLocation}
-            difficulty={state.difficulty}
             hasGuess={state.currentGuess !== null}
             onSubmit={handleSubmit}
           />
@@ -188,13 +209,25 @@ export default function App() {
           />
         )}
 
-        {state.gameStatus === 'completed' && (
+        {liveCompleted && (
           <ResultsScreen
             answers={state.answers}
             locations={state.selectedLocations}
             totalScoreKm={state.totalScoreKm}
+            gameNo={gameNo}
+            dateLabel={todayKey}
             isNewBest={isNewBest}
-            onReplay={handleReplay}
+          />
+        )}
+
+        {showStored && storedResult && (
+          <ResultsScreen
+            answers={storedResult.answers}
+            locations={locations.filter((l) => storedResult.locationIds.includes(l.id))}
+            totalScoreKm={storedResult.totalScoreKm}
+            gameNo={storedResult.gameNo}
+            dateLabel={storedResult.dayKey}
+            isNewBest={false}
           />
         )}
       </main>

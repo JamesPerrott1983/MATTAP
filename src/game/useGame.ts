@@ -2,7 +2,6 @@ import { useCallback, useMemo, useReducer } from 'react';
 import type { Answer, Difficulty, GameState, LatLng, MatLocation } from '../types';
 import { calculateDistanceKm } from './distance';
 import { QUESTIONS_PER_GAME } from './scoring';
-import { selectRandomLocations } from './selectLocations';
 import { recordScore } from './storage';
 
 export type GameAction =
@@ -87,16 +86,13 @@ export function reducer(state: GameState, action: GameAction): GameState {
 }
 
 /** All game behaviour lives here, fully separated from the UI components. */
-export function useGame(allLocations: MatLocation[]) {
+export function useGame() {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  const startGame = useCallback(
-    (difficulty: Difficulty) => {
-      const locations = selectRandomLocations(allLocations, QUESTIONS_PER_GAME);
-      dispatch({ type: 'START_GAME', locations, difficulty });
-    },
-    [allLocations],
-  );
+  /** Start a game with an explicit set of locations (e.g. today's daily five). */
+  const startGame = useCallback((locations: MatLocation[], difficulty: Difficulty = 'easy') => {
+    dispatch({ type: 'START_GAME', locations, difficulty });
+  }, []);
 
   const placeGuess = useCallback((guess: LatLng) => {
     dispatch({ type: 'PLACE_GUESS', guess });

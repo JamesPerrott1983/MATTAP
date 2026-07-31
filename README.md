@@ -1,13 +1,55 @@
 # MAT Global Challenge
 
-A mobile-first location-guessing game about **MAT Holdings** companies around the world.
-Players read clues about a MAT company or facility, tap an interactive 3D globe where they
-think it is located, and score the great-circle distance between their guess and the real
-site. Five questions per game — **the lower the total, the better**.
+A mobile-first **daily** location-guessing game about **MAT Holdings** companies around
+the world. Every calendar day, all players get the same five MAT locations (chosen
+deterministically from the date). Players read the clues, tap a realistic satellite-imagery
+3D globe where they think each site is, and score the great-circle distance between their
+guess and the real location. **The lower the total, the better.** A new game unlocks at
+local midnight, with a Wordle-style emoji share block for comparing scores.
 
 Built with **React + TypeScript + Vite + Globe.gl** (Three.js). No mapping API key is
-required: the globe renders bundled land polygons, so the game works fully offline once
-loaded.
+required: the satellite Earth texture is bundled locally, so the game works fully offline
+once loaded.
+
+## Daily game
+
+- The five locations are picked with a seeded RNG from the date (`src/game/daily.ts`),
+  so everyone gets the same game on the same day. Game #1 was 31 July 2026.
+- After finishing, the result is stored locally: reloading shows the results screen with
+  a countdown to the next game ("New game tomorrow! Unlocks in 3 hours, 4 mins").
+- **Share Your Score** produces a Where's-Matty-style block:
+
+  ```
+  MAT Global Challenge #12 2026-07-31
+  3,870 km · 🌍
+  🟩🟨⬛🟩🟨
+  https://…/MATTAP/
+  ```
+
+  🟩 within 250 km · 🟨 within 1,000 km · ⬛ further (per question).
+- The results screen also includes a review of each location — tap one to read the full
+  story, facts, products and website (edit the "Review" field in the admin page).
+
+## Admin — Location Manager
+
+Open **`/#admin`** (e.g. `https://…/MATTAP/#admin`) and enter the admin password.
+Default password: **`MATadmin2026`** — change it by editing `ADMIN_PASSWORD_HASH` in
+`src/components/AdminPage.tsx`; generate a new hash with:
+
+```bash
+node -e "console.log(require('crypto').createHash('sha256').update('YOUR-NEW-PASSWORD').digest('hex'))"
+```
+
+In the admin page you can add, edit, deactivate and delete locations (coordinates,
+descriptions, clues, review text, facts, products…).
+
+**Important — how publishing works.** This is a static site with no server, so admin
+edits are saved in *your browser only* (they take effect immediately for you, which is
+also great for previewing). To publish for every player, click **Export locations.json**,
+replace `src/data/locations.json` in the project with the downloaded file, then commit
+and push — the GitHub Action redeploys automatically. The password gate deters casual
+visitors, but anything shipped to a public static site is ultimately inspectable — don't
+put confidential data in the game.
 
 ## Quick start
 

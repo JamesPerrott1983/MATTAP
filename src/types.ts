@@ -26,6 +26,8 @@ export interface MatLocation {
   founded?: string;
   clue?: string;
   facts?: string[];
+  /** Longer end-of-game review text shown on the results screen. */
+  review?: string;
   website?: string;
   image?: string;
   logo?: string;
@@ -62,4 +64,13 @@ export interface PersistedPrefs {
   lastScoreKm: number | null;
   difficulty: Difficulty;
   soundEnabled: boolean;
+}
+
+/** A finished daily game, stored so the result survives reloads. */
+export interface DailyResult {
+  dayKey: string;
+  gameNo: number;
+  answers: Answer[];
+  totalScoreKm: number;
+  locationIds: string[];
 }

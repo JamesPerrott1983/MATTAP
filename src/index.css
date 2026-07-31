@@ -580,3 +580,279 @@ body {
     font-size: 36px;
   }
 }
+
+/* ---------------- Daily game additions ---------------- */
+
+.start__gameno,
+.results__gameno {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.results__squares {
+  margin: 4px 0 0;
+  font-size: 24px;
+  letter-spacing: 2px;
+}
+
+.results__tomorrow {
+  margin: 16px 0 4px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--mat-amber);
+  font-weight: 600;
+}
+
+.results__sharefeedback {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--mat-green);
+}
+
+.results__reviewheading {
+  margin: 18px 0 8px;
+  font-size: 16px;
+  text-align: left;
+}
+
+.results__item--review {
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0;
+}
+
+.results__item-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  padding: 10px 12px;
+  cursor: pointer;
+  min-height: 48px;
+}
+
+.results__item-chevron {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.results__review {
+  padding: 0 12px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.results__review p {
+  margin: 8px 0;
+}
+
+.results__review a {
+  color: var(--mat-blue-light);
+}
+
+.results__fact {
+  color: var(--text);
+}
+
+/* ---------------- Admin page ---------------- */
+
+.admin-page {
+  min-height: 100dvh;
+  padding: calc(16px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.admin__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin__header h1 {
+  margin: 0 0 6px;
+  font-size: 24px;
+}
+
+.admin--login {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 28px 22px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  margin: auto 0;
+}
+
+.admin--login h1 {
+  margin: 0 0 6px;
+  font-size: 22px;
+}
+
+.admin__loginform {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.admin__note {
+  margin: 6px 0 12px;
+  font-size: 14px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.admin__error {
+  color: #ff8a8a;
+  font-size: 14px;
+  margin: 10px 0 0;
+}
+
+.admin__backlink {
+  color: var(--mat-blue-light);
+  font-size: 14px;
+  text-decoration: none;
+  display: inline-block;
+  margin-top: 10px;
+}
+
+.admin__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+
+.admin__actions .btn {
+  width: auto;
+  flex: 1 1 160px;
+}
+
+.admin__message {
+  background: rgba(52, 199, 123, 0.14);
+  border: 1px solid rgba(52, 199, 123, 0.4);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.admin__form {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin: 12px 0;
+}
+
+.admin__form h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
+.admin__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px 12px;
+}
+
+.admin__grid label,
+.admin__block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.admin__block {
+  margin-top: 10px;
+}
+
+.admin__input {
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  font-size: 15px;
+  font-family: inherit;
+}
+
+textarea.admin__input {
+  resize: vertical;
+}
+
+.admin__input:focus {
+  outline: 2px solid var(--mat-blue);
+  outline-offset: 1px;
+}
+
+.admin__check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.admin__check input {
+  width: 20px;
+  height: 20px;
+}
+
+.admin__list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin__row {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-height: 48px;
+}
+
+.admin__row:hover {
+  border-color: var(--mat-blue);
+}
+
+.admin__row-name {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.admin__row-place {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}

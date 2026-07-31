@@ -1,10 +1,8 @@
 import { useEffect, useRef } from 'react';
 import Globe, { type GlobeInstance } from 'globe.gl';
-import { MeshPhongMaterial } from 'three';
-import * as topojson from 'topojson-client';
-import type { Topology, GeometryCollection } from 'topojson-specification';
-import landTopo from '../data/land-110m.json';
 import type { LatLng } from '../types';
+import earthTexture from '../assets/earth-blue-marble.jpg';
+import earthBumpMap from '../assets/earth-topology.png';
 
 /* ------------------------------------------------------------------ */
 /* Types                                                               */
@@ -34,17 +32,6 @@ interface GlobeMapProps {
   view: GlobeView | null;
   onTap: (coords: LatLng) => void;
 }
-
-/* ------------------------------------------------------------------ */
-/* Static land polygons (bundled — no network requests needed)         */
-/* ------------------------------------------------------------------ */
-
-const topology = landTopo as unknown as Topology<{ land: GeometryCollection }>;
-const landFeatures = (
-  topojson.feature(topology, topology.objects.land) as unknown as {
-    features?: object[];
-  }
-).features ?? [topojson.feature(topology, topology.objects.land)];
 
 /* ------------------------------------------------------------------ */
 /* Marker elements                                                     */
@@ -115,21 +102,15 @@ export default function GlobeMap({
 
     const globe = new Globe(container)
       .backgroundColor('rgba(0,0,0,0)')
+      // Real satellite imagery ("blue marble") with a topography bump map,
+      // bundled locally so no external requests are needed.
+      .globeImageUrl(earthTexture)
+      .bumpImageUrl(earthBumpMap)
       .showAtmosphere(true)
-      .atmosphereColor('#2d7dd2')
-      .atmosphereAltitude(0.18)
-      .showGraticules(true)
-      .polygonsData(landFeatures)
-      .polygonCapColor(() => '#1c3d63')
-      .polygonSideColor(() => 'rgba(0,0,0,0)')
-      .polygonStrokeColor(() => '#3f6da0')
-      .polygonAltitude(0.006)
+      .atmosphereColor('#6ab3ff')
+      .atmosphereAltitude(0.16)
       .onGlobeClick((coords) => {
         if (interactiveRef.current) onTapRef.current(coords);
-      })
-      .onPolygonClick((_poly, _ev, coords) => {
-        // Land polygons sit above the sphere, so forward their taps too.
-        if (interactiveRef.current) onTapRef.current({ lat: coords.lat, lng: coords.lng });
       })
       .htmlElement((d) => createMarkerElement(d as MarkerDatum))
       .htmlAltitude(0.01)
@@ -143,10 +124,6 @@ export default function GlobeMap({
       .arcDashGap(0.15)
       .arcDashAnimateTime(reducedMotion ? 0 : 1600)
       .pointOfView({ lat: 25, lng: 5, altitude: 2.2 }, 0);
-
-    // Deep-navy sphere instead of a satellite texture: crisp, on-brand and
-    // fully offline-capable.
-    globe.globeMaterial(new MeshPhongMaterial({ color: '#0d1f38', transparent: false }));
 
     const controls = globe.controls();
     controls.autoRotateSpeed = 0.55;
