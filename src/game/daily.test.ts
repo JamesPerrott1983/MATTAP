@@ -23,10 +23,10 @@ describe('dayKey / gameNumber', () => {
     expect(dayKey(new Date(2026, 6, 31))).toBe('2026-07-31');
   });
 
-  it('is #1 on launch day and increments daily', () => {
-    expect(gameNumber(new Date(2026, 6, 31))).toBe(1);
-    expect(gameNumber(new Date(2026, 7, 1))).toBe(2);
-    expect(gameNumber(new Date(2026, 7, 30))).toBe(31);
+  it('is #1 on launch day (1 Aug 2026) and increments daily', () => {
+    expect(gameNumber(new Date(2026, 7, 1))).toBe(1);
+    expect(gameNumber(new Date(2026, 7, 2))).toBe(2);
+    expect(gameNumber(new Date(2026, 7, 31))).toBe(31);
   });
 });
 
@@ -71,6 +71,29 @@ describe('dailyLocations', () => {
       const picked = dailyLocations(POOL, new Date(2026, 6, 31 + offset));
       expect(new Set(picked.map((l) => l.id)).size).toBe(5);
     }
+  });
+});
+
+describe('dailyLocations with a schedule', () => {
+  const d = new Date(2026, 7, 1); // dayKey 2026-08-01
+
+  it('uses the hand-picked locations, in order, for a scheduled day', () => {
+    const schedule = { '2026-08-01': ['loc-7', 'loc-2', 'loc-19', 'loc-0', 'loc-11'] };
+    const picked = dailyLocations(POOL, d, schedule).map((l) => l.id);
+    expect(picked).toEqual(['loc-7', 'loc-2', 'loc-19', 'loc-0', 'loc-11']);
+  });
+
+  it('falls back to the random pick when the plan references missing locations', () => {
+    const schedule = { '2026-08-01': ['ghost-1', 'ghost-2', 'ghost-3', 'ghost-4', 'ghost-5'] };
+    const picked = dailyLocations(POOL, d, schedule);
+    expect(picked).toHaveLength(5);
+    expect(picked.map((l) => l.id)).toEqual(dailyLocations(POOL, d).map((l) => l.id));
+  });
+
+  it('ignores the schedule for other days', () => {
+    const schedule = { '2026-08-02': ['loc-1', 'loc-2', 'loc-3', 'loc-4', 'loc-5'] };
+    const picked = dailyLocations(POOL, d, schedule).map((l) => l.id);
+    expect(picked).toEqual(dailyLocations(POOL, d).map((l) => l.id));
   });
 });
 

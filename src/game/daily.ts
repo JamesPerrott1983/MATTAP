@@ -8,7 +8,7 @@ import { QUESTIONS_PER_GAME } from './scoring';
 import { selectRandomLocations } from './selectLocations';
 
 /** Game #1 launch date (local time). */
-export const EPOCH = { year: 2026, month: 7, day: 31 }; // 31 July 2026
+export const EPOCH = { year: 2026, month: 8, day: 1 }; // 1 August 2026
 
 /** Key like "2026-07-31" for a given date, in the player's local timezone. */
 export function dayKey(date: Date): string {
@@ -43,8 +43,31 @@ export function seedFor(date: Date): number {
   return date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
 }
 
-/** The five locations for a given date — deterministic for that date. */
-export function dailyLocations(pool: MatLocation[], date: Date): MatLocation[] {
+/** Day key → ordered list of location ids picked by the admin. */
+export type Schedule = Record<string, string[]>;
+
+/**
+ * The five locations for a given date — deterministic for that date.
+ * If the admin has scheduled this day (and the ids resolve to five usable
+ * active locations), that hand-picked set is used in order; otherwise the
+ * seeded random selection applies, exactly as before.
+ */
+export function dailyLocations(
+  pool: MatLocation[],
+  date: Date,
+  schedule: Schedule = {},
+): MatLocation[] {
+  const planned = schedule[dayKey(date)];
+  if (planned && planned.length >= QUESTIONS_PER_GAME) {
+    const byId = new Map(pool.filter((l) => l.active).map((l) => [l.id, l]));
+    const resolved = [...new Set(planned)]
+      .map((id) => byId.get(id))
+      .filter((l): l is MatLocation => Boolean(l))
+      .slice(0, QUESTIONS_PER_GAME);
+    if (resolved.length === QUESTIONS_PER_GAME) return resolved;
+    // Fall through to random selection when the plan is unusable
+    // (e.g. a scheduled location was deleted or deactivated).
+  }
   const rng = mulberry32(seedFor(date));
   return selectRandomLocations(pool, QUESTIONS_PER_GAME, rng);
 }

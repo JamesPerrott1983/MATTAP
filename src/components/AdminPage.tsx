@@ -3,16 +3,22 @@ import type { MatLocation } from '../types';
 import {
   bundledLocations,
   clearOverrides,
+  effectiveSchedule,
   exportJson,
+  exportScheduleJson,
   loadOverrides,
   saveOverrides,
+  saveScheduleOverrides,
 } from '../data/locationsStore';
+import type { Schedule } from '../game/daily';
+import { dayKey } from '../game/daily';
+import { QUESTIONS_PER_GAME } from '../game/scoring';
 import { hasValidCoordinates } from '../game/selectLocations';
 import PrimaryButton from './PrimaryButton';
 
 /**
- * SHA-256 hash of the admin password.
- * Default password: MATadmin2026
+ * SHA-256 hash of the admin password (the password itself is NOT stored in
+ * this repository — the game admin holds it).
  * To change it, run:
  *   node -e "console.log(require('crypto').createHash('sha256').update('YOUR-NEW-PASSWORD').digest('hex'))"
  * and paste the output here.
@@ -20,7 +26,7 @@ import PrimaryButton from './PrimaryButton';
  * NOTE: this is a static site, so this gate deters casual visitors — it is
  * not bank-grade security. Do not put confidential data in the game.
  */
-const ADMIN_PASSWORD_HASH = '830c29dc1b33305d6e42089e61f891082513157d33e5989544669b9026599e0e';
+const ADMIN_PASSWORD_HASH = '33be8cfc3707f14b0759770039847d49707c2823077345b6f7b1ec18c1cec7e3';
 const AUTH_KEY = 'mat-admin-authed';
 
 async function sha256Hex(text: string): Promise<string> {
@@ -65,6 +71,15 @@ export default function AdminPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState<MatLocation | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+
+  /* Daily schedule (specific days → hand-picked locations) */
+  const [schedule, setSchedule] = useState<Schedule>(() => effectiveSchedule());
+  const [planDate, setPlanDate] = useState(() => {
+    const t = new Date();
+    t.setDate(t.getDate() + 1);
+    return dayKey(t);
+  });
+  const [planIds, setPlanIds] = useState<string[]>(Array(QUESTIONS_PER_GAME).fill(''));
 
   const usingOverrides = useMemo(() => loadOverrides() !== null, [locations]);
 
@@ -188,6 +203,54 @@ export default function AdminPage() {
     setMessage('Local changes discarded — back to the published data.');
   };
 
+  /* ---------------- schedule handlers ---------------- */
+
+  const savePlan = () => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(planDate)) {
+      setMessage('Pick a valid date for the schedule entry.');
+      return;
+    }
+    const ids = planIds.filter(Boolean);
+    if (new Set(ids).size !== QUESTIONS_PER_GAME) {
+      setMessage(`Pick ${QUESTIONS_PER_GAME} different locations for ${planDate}.`);
+      return;
+    }
+    const next = { ...schedule, [planDate]: ids };
+    setSchedule(next);
+    saveScheduleOverrides(next);
+    setPlanIds(Array(QUESTIONS_PER_GAME).fill(''));
+    setMessage(
+      `Scheduled ${planDate} (in this browser). Use "Export schedule.json" to publish for everyone.`,
+    );
+  };
+
+  const deletePlan = (date: string) => {
+    const next = { ...schedule };
+    delete next[date];
+    setSchedule(next);
+    saveScheduleOverrides(next);
+    setMessage(`${date} unscheduled — that day falls back to the random daily pick.`);
+  };
+
+  const editPlan = (date: string) => {
+    setPlanDate(date);
+    const ids = schedule[date] ?? [];
+    setPlanIds(Array.from({ length: QUESTIONS_PER_GAME }, (_, i) => ids[i] ?? ''));
+  };
+
+  const doExportSchedule = () => {
+    const blob = new Blob([exportScheduleJson(schedule)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'schedule.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    setMessage(
+      'Downloaded schedule.json — replace src/data/schedule.json in the project and push to GitHub to publish it.',
+    );
+  };
+
   const activeCount = locations.filter((l) => l.active).length;
 
   return (
@@ -221,6 +284,86 @@ export default function AdminPage() {
           {message}
         </p>
       )}
+
+      <section className="admin__schedule">
+        <h2>Daily schedule</h2>
+        <p className="admin__note">
+          Pick the five locations for specific days. Days without an entry use the automatic
+          random selection, as normal.
+        </p>
+
+        <div className="admin__plan">
+          <label className="admin__block">
+            Date
+            <input
+              type="date"
+              className="admin__input"
+              value={planDate}
+              onChange={(e) => setPlanDate(e.target.value)}
+            />
+          </label>
+          <div className="admin__plan-slots">
+            {planIds.map((id, i) => (
+              <label key={i} className="admin__block">
+                Location {i + 1}
+                <select
+                  className="admin__input"
+                  value={id}
+                  onChange={(e) =>
+                    setPlanIds((prev) => prev.map((p, j) => (j === i ? e.target.value : p)))
+                  }
+                >
+                  <option value="">— choose —</option>
+                  {locations
+                    .filter((l) => l.active)
+                    .map((l) => (
+                      <option key={l.id} value={l.id} disabled={planIds.includes(l.id) && id !== l.id}>
+                        {l.companyName} ({l.city})
+                      </option>
+                    ))}
+                </select>
+              </label>
+            ))}
+          </div>
+          <div className="admin__actions">
+            <PrimaryButton onClick={savePlan}>Save Day</PrimaryButton>
+            <PrimaryButton variant="secondary" onClick={doExportSchedule}>
+              Export schedule.json
+            </PrimaryButton>
+          </div>
+        </div>
+
+        {Object.keys(schedule).length > 0 && (
+          <ul className="admin__schedulelist">
+            {Object.entries(schedule)
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([date, ids]) => (
+                <li key={date} className="admin__scheduleitem">
+                  <div className="admin__scheduleinfo">
+                    <strong>{date}</strong>
+                    <span>
+                      {ids
+                        .map((id) => locations.find((l) => l.id === id)?.companyName ?? `⚠ ${id}`)
+                        .join(' · ')}
+                    </span>
+                  </div>
+                  <div className="admin__schedulebtns">
+                    <button type="button" className="admin__minibtn" onClick={() => editPlan(date)}>
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="admin__minibtn admin__minibtn--danger"
+                      onClick={() => deletePlan(date)}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </li>
+              ))}
+          </ul>
+        )}
+      </section>
 
       {draft && (
         <div className="admin__form">

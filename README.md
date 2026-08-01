@@ -14,7 +14,10 @@ once loaded.
 ## Daily game
 
 - The five locations are picked with a seeded RNG from the date (`src/game/daily.ts`),
-  so everyone gets the same game on the same day. Game #1 was 31 July 2026.
+  so everyone gets the same game on the same day. Game #1 was 1 August 2026.
+- The admin can hand-pick the locations for specific days (see "Daily schedule" in the
+  admin page; stored in `src/data/schedule.json`). Days without an entry use the
+  automatic random selection.
 - After finishing, the result is stored locally: reloading shows the results screen with
   a countdown to the next game ("New game tomorrow! Unlocks in 3 hours, 4 mins").
 - **Share Your Score** produces a Where's-Matty-style block:
@@ -33,15 +36,18 @@ once loaded.
 ## Admin — Location Manager
 
 Open **`/#admin`** (e.g. `https://…/MATTAP/#admin`) and enter the admin password.
-Default password: **`MATadmin2026`** — change it by editing `ADMIN_PASSWORD_HASH` in
-`src/components/AdminPage.tsx`; generate a new hash with:
+The password is not stored in this repository — the game admin holds it. To change it,
+edit `ADMIN_PASSWORD_HASH` in `src/components/AdminPage.tsx`; generate a new hash with:
 
 ```bash
 node -e "console.log(require('crypto').createHash('sha256').update('YOUR-NEW-PASSWORD').digest('hex'))"
 ```
 
 In the admin page you can add, edit, deactivate and delete locations (coordinates,
-descriptions, clues, review text, facts, products…).
+descriptions, clues, review text, facts, products, photos…) and hand-pick the five
+locations for specific days ("Daily schedule"). Exports: **Export locations.json** →
+replace `src/data/locations.json`; **Export schedule.json** → replace
+`src/data/schedule.json`; push to publish.
 
 **Important — how publishing works.** This is a static site with no server, so admin
 edits are saved in *your browser only* (they take effect immediately for you, which is

@@ -4,7 +4,7 @@ import { useGame } from './game/useGame';
 import { QUESTIONS_PER_GAME } from './game/scoring';
 import { loadDailyResult, loadPrefs, saveDailyResult } from './game/storage';
 import { dailyLocations, dayKey, gameNumber } from './game/daily';
-import { effectiveLocations } from './data/locationsStore';
+import { effectiveLocations, effectiveSchedule } from './data/locationsStore';
 import GlobeMap, { altitudeForDistance, midpoint, type GlobeView } from './components/GlobeMap';
 import StartScreen from './components/StartScreen';
 import ResultsScreen from './components/ResultsScreen';
@@ -37,9 +37,12 @@ export default function App() {
   const [prefs, setPrefs] = useState(loadPrefs);
   const [isNewBest, setIsNewBest] = useState(false);
   const [fatalError, setFatalError] = useState<string | null>(null);
-  const [storedResult, setStoredResult] = useState<DailyResult | null>(() =>
-    loadDailyResult(todayKey),
-  );
+  const [storedResult, setStoredResult] = useState<DailyResult | null>(() => {
+    const stored = loadDailyResult(todayKey);
+    // Ignore results from a different numbering (e.g. after a game restart),
+    // so players can play the new day 1.
+    return stored && stored.gameNo === gameNumber(new Date()) ? stored : null;
+  });
   const [view, setView] = useState<GlobeView | null>(null);
   const viewSeq = useRef(0);
 
@@ -70,7 +73,7 @@ export default function App() {
 
   const handleStart = useCallback(() => {
     try {
-      game.startGame(dailyLocations(locations, today));
+      game.startGame(dailyLocations(locations, today, effectiveSchedule()));
       pushView({ lat: 25, lng: 5, altitude: 2.2, transitionMs: 900 });
     } catch (err) {
       setFatalError(err instanceof Error ? err.message : 'Failed to start the game.');

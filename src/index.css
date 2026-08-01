@@ -970,3 +970,77 @@ textarea.admin__input {
   font-weight: 600;
   color: var(--text-dim);
 }
+
+/* ---------------- v2.3: daily schedule ---------------- */
+
+.admin__schedule {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin: 12px 0;
+}
+
+.admin__schedule h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.admin__plan-slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 8px 12px;
+}
+
+.admin__schedulelist {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin__scheduleitem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.admin__scheduleinfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  min-width: 0;
+}
+
+.admin__scheduleinfo span {
+  color: var(--text-dim);
+}
+
+.admin__schedulebtns {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.admin__minibtn {
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin__minibtn--danger {
+  border-color: rgba(255, 120, 120, 0.5);
+  color: #ff9d9d;
+}
