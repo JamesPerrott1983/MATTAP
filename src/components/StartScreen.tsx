@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import PrimaryButton from './PrimaryButton';
-import matLogo from '../assets/mat-logo.png';
+import matLogo from '../assets/mat-logo-full.png';
 
 interface StartScreenProps {
   gameNo: number;
@@ -15,10 +15,8 @@ export default function StartScreen({ gameNo, dateLabel, bestScoreKm, onStart }:
   return (
     <div className="overlay overlay--start">
       <div className="start">
-        <div className="start__logocard">
-          <img src={matLogo} alt="MAT Holdings, Inc." className="start__logo" />
-        </div>
-        <h1 className="start__title">MAT Global Challenge</h1>
+        <img src={matLogo} alt="MAT Global Challenge" className="start__logo" />
+        <h1 className="visually-hidden">MAT Global Challenge</h1>
         <p className="start__gameno">
           #{gameNo} · {dateLabel}
         </p>

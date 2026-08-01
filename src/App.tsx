@@ -13,6 +13,7 @@ import AnswerPanel from './components/AnswerPanel';
 import ProgressIndicator from './components/ProgressIndicator';
 import ErrorMessage from './components/ErrorMessage';
 import AdminPage from './components/AdminPage';
+import matLogoSmall from './assets/mat-logo-small.png';
 
 export default function App() {
   /* ---------------- routing (#admin) ---------------- */
@@ -158,18 +159,15 @@ export default function App() {
   return (
     <div className="app">
       <header className="header">
-        <span className="header__brand">
-          <span className="header__logo" aria-hidden="true">
-            MAT
-          </span>
-          Global Challenge
-        </span>
-        {(playing || revealed) && (
+        {playing || revealed ? (
           <ProgressIndicator
             current={state.currentQuestionIndex + 1}
             totalScoreKm={state.totalScoreKm}
           />
+        ) : (
+          <span />
         )}
+        <img src={matLogoSmall} alt="MAT Global Challenge" className="header__logoimg" />
       </header>
 
       <main className="stage">

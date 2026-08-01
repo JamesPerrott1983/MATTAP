@@ -915,3 +915,58 @@ textarea.admin__input {
 .results__review-lead {
   color: var(--text);
 }
+
+/* ---------------- v2.2: transparent logo + swipeable sheet ---------------- */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.start__logo {
+  display: block;
+  width: min(78%, 320px);
+  height: auto;
+  margin: 0 auto 4px;
+  filter: drop-shadow(0 6px 24px rgba(0, 0, 0, 0.5));
+}
+
+.header__logoimg {
+  height: 30px;
+  width: auto;
+  margin-left: auto;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.5));
+}
+
+/* Sheet drag feel */
+.sheet {
+  transition: transform 0.25s ease;
+  touch-action: none;
+}
+
+.sheet__body,
+.sheet__footer {
+  touch-action: auto;
+}
+
+.sheet__handle {
+  touch-action: none;
+  cursor: grab;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.sheet__handle:active {
+  cursor: grabbing;
+}
+
+.sheet__peek {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
